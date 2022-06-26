@@ -65,7 +65,7 @@ use vars qw ($opt_outfile $opt_title $opt_updatedtitle
 	     $opt_exthtype $opt_addexthtype $opt_exthdata $opt_booktype
 	     $opt_delexthtype $opt_delexthindex $opt_mbpfile $opt_savecover $opt_savethumb
 	     $opt_imagerescale
-	     $opt_allowtts $opt_deleteclippinglimit $opt_imagemaxbytes);
+	     $opt_allowtts $opt_deleteclippinglimit $opt_removefontoverride $opt_imagemaxbytes $opt_setasin);
 
 Getopt::Mixed::getOptions ("outfile=s title=s updatedtitle=s 
                             prefixtitle=s author=s addauthor=s
@@ -76,8 +76,8 @@ Getopt::Mixed::getOptions ("outfile=s title=s updatedtitle=s
                             delexthindex=s booktype=s
                             addthumbnail=s coverimage=s coveroffset=s
                             mbpfile=s savecover=s savethumb=s imagerescale=s
-                            allowtts deleteclippinglimit
-                            imagemaxbytes=s
+                            allowtts deleteclippinglimit removefontoverride
+                            imagemaxbytes=s setasin=s
                             ");
 
 if (not defined $opt_outfile) {
@@ -92,6 +92,7 @@ if (not defined $opt_outfile) {
 	defined $opt_delexthtype or defined $opt_delexthindex or
 	defined $opt_booktype or defined $opt_addthumbnail or
 	defined $opt_coverimage or defined $opt_coveroffset or
+	defined $opt_setasin or defined $opt_removefontoverride or
 	defined $opt_mbpfile or defined $opt_imagerescale) {
 	print STDERR "ERROR: --outfile must be specified\n";
 	exit 0;
@@ -105,6 +106,7 @@ my $description = "";
 my $subject = "";
 my $title = "";
 my $updatedtitle = "";
+my $setasin = "";
 
 my $delexthindex = 0;
 $delexthindex = $opt_delexthindex if defined $opt_delexthindex;
@@ -144,6 +146,7 @@ $updatedtitle = $opt_updatedtitle if defined $opt_updatedtitle;
 $publisher = $opt_publisher if defined $opt_publisher;
 $description = $opt_description if defined $opt_description;
 $subject = $opt_subject if defined $opt_subject;
+$setasin = $opt_setasin if defined $opt_setasin;
 
 
 #
@@ -182,6 +185,8 @@ if (not $filename) {
     print "         --savecover FILENAME\n";
     print "         --savethumb FILENAME\n";
     print "         --imagerescale 0|1\n";
+    print "         --removefontoverride\n";
+    print "         --setasin ASIN\n";
     print "         --imagemaxbytes n\n";
     exit 0;
 }
@@ -448,6 +453,11 @@ if (defined $opt_outfile) {
 						       $updatedtitle);
 	}
 
+    if (defined $opt_setasin) {
+	    $mh = MobiPerl::MobiHeader::set_exth_data ($mh, "asin", $setasin);
+	    $mh = MobiPerl::MobiHeader::set_exth_data ($mh, "cdekey", $setasin);
+    }
+
 	if (defined $opt_booktype) {
 	    print STDERR "Setting new booktype: $opt_booktype\n";
 	    $mh = MobiPerl::MobiHeader::set_booktype ($mh, $opt_booktype);
@@ -487,6 +497,10 @@ if (defined $opt_outfile) {
 
 	if (defined $opt_allowtts) {
 	    $mh = MobiPerl::MobiHeader::set_exth_data ($mh, "ttsflag", undef, 0, 0);
+	}
+
+	if (defined $opt_removefontoverride) {
+	    $mh = MobiPerl::MobiHeader::set_exth_data ($mh, "overridefonts", "false");
 	}
 
 	if (defined $opt_deleteclippinglimit) {
